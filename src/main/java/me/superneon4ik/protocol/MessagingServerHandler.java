@@ -1,5 +1,6 @@
 package me.superneon4ik.protocol;
 
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.PublicKey;
@@ -111,7 +112,7 @@ public class MessagingServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        cause.printStackTrace();
+        if (!cause.getClass().equals(SocketException.class)) cause.printStackTrace();
         ctx.close();
     }
 
