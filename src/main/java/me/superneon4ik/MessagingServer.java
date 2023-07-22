@@ -5,17 +5,17 @@ import java.util.HashMap;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.AdaptiveRecvByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.RecvByteBufAllocator;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import lombok.Getter;
-import me.superneon4ik.protocol.EndOfPacketEncoder;
-import me.superneon4ik.protocol.EndOfPacketHandler;
 import me.superneon4ik.protocol.MessagingServerHandler;
 
 @Getter
@@ -42,13 +42,12 @@ public class MessagingServer {
                     @Override
                     protected void initChannel(SocketChannel ch) throws Exception {
                         ch.pipeline().addLast(
-                            new EndOfPacketHandler(),
-                            new EndOfPacketEncoder(),
                             new MessagingServerHandler(MessagingServer.this));                   
                     }
                 })
                 .option(ChannelOption.SO_BACKLOG, 128)
-                .childOption(ChannelOption.SO_KEEPALIVE, true);
+                .childOption(ChannelOption.SO_KEEPALIVE, true)
+                .childOption(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator(1024*2, 32*1024, 1024*1024*2));
 
             ChannelFuture f = b.bind(host, port).sync();
 

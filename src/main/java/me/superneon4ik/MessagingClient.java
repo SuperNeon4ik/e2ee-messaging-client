@@ -26,6 +26,7 @@ import org.apache.logging.log4j.Logger;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.AdaptiveRecvByteBufAllocator;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -39,8 +40,6 @@ import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import lombok.Getter;
 import me.superneon4ik.enums.PacketID;
-import me.superneon4ik.protocol.EndOfPacketEncoder;
-import me.superneon4ik.protocol.EndOfPacketHandler;
 import me.superneon4ik.protocol.MessagingClientHandler;
 
 @Getter 
@@ -98,14 +97,13 @@ public class MessagingClient {
             b.group(workerGroup);
             b.channel(NioSocketChannel.class);
             b.option(ChannelOption.SO_KEEPALIVE, true);
+            b.option(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator(1024*2, 32*1024, 1024*1024*2));
             b.handler(new ChannelInitializer<SocketChannel>() {
  
                 @Override
                 public void initChannel(SocketChannel ch) 
                   throws Exception {
                     ch.pipeline().addLast(
-                        new EndOfPacketHandler(),
-                        new EndOfPacketEncoder(),
                         new MessagingClientHandler(MessagingClient.this));
                 }
             });
