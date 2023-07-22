@@ -6,8 +6,11 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
@@ -36,6 +39,10 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import lombok.Getter;
+import me.superneon4ik.commands.CommandExecutor;
+import me.superneon4ik.commands.client.HelpCommand;
+import me.superneon4ik.commands.client.QuitCommand;
+import me.superneon4ik.commands.client.UsersCommand;
 import me.superneon4ik.enums.PacketID;
 import me.superneon4ik.protocol.MessagingClientHandler;
 
@@ -52,6 +59,7 @@ public class MessagingClient {
     private PrivateKey privateKey;
     private final Map<String, PublicKey> publicKeys = new HashMap<>();
     private final ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
+    private final List<CommandExecutor> commands = new ArrayList<>();
 
     public MessagingClient(String name, String host, int port) throws NoSuchAlgorithmException {
         this.name = name;
@@ -64,7 +72,9 @@ public class MessagingClient {
         publicKey = keyPair.getPublic();
         privateKey = keyPair.getPrivate();
 
-        LOGGER.info("My Public Key: " + Base64.getEncoder().encodeToString(publicKey.getEncoded()));
+        commands.add(new HelpCommand());
+        commands.add(new UsersCommand(this));
+        commands.add(new QuitCommand());
     }
 
     public void run() throws InterruptedException {
@@ -130,18 +140,20 @@ public class MessagingClient {
         }
     }
 
-    private void handleCommand(String command) {
-        switch (command.toLowerCase()) {
-            case "!quit" -> LOGGER.info("Use CTRL+C to quit.");
-            case "!users" -> {
-                LOGGER.info(String.format("There are %d users in the chat:", getPublicKeys().size()));
-                for (String username : getPublicKeys().keySet()) {
-                    LOGGER.info(String.format("- %s: %s", username, Base64.getEncoder().encodeToString(getPublicKeys().get(username).getEncoded())));
-                }
-            }
-            case "!help" -> {
-                LOGGER.info("Current list of commands:\n- !help\n- !users\n- !quit");
-            }
+    private void handleCommand(String input) {
+        String[] tokens = input.split(" ");
+        String command = tokens[0].substring(1);
+        List<String> args = Arrays.stream(tokens).skip(1).toList();
+
+        var optExecutor = commands.stream().filter(c -> c.match(command)).findFirst();
+        if (optExecutor.isEmpty()) {
+            LOGGER.warn(String.format("No such command '%s'.", command));
+            return;
+        }
+
+        boolean result = optExecutor.get().execute(command, args);
+        if (!result) {
+            LOGGER.error(String.format("Command '%s' failed to execute properly.", command));
         }
     }
 
