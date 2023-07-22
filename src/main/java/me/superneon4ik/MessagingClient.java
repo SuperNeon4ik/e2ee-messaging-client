@@ -6,19 +6,17 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.Base64;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import javax.crypto.spec.IvParameterSpec;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,7 +34,6 @@ import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import lombok.Getter;
 import me.superneon4ik.enums.PacketID;
@@ -157,7 +154,6 @@ public class MessagingClient {
         cipher.init(Cipher.ENCRYPT_MODE, key);
         byte[] cipherText = cipher.doFinal(message.getBytes());
 
-        int i = 0;
         for (Entry<String, PublicKey> entry : publicKeys.entrySet()) {
             Cipher rsaCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
             rsaCipher.init(Cipher.ENCRYPT_MODE, entry.getValue());
@@ -172,10 +168,7 @@ public class MessagingClient {
             msgBuf.writeInt(cipherText.length);
             msgBuf.writeBytes(cipherText);
             broadcast(msgBuf);
-            i++;
         }
-
-        LOGGER.info(String.format("Sent %d MESSAGE packets.", i));
     }
 
     public void broadcast(ByteBuf msg) {
