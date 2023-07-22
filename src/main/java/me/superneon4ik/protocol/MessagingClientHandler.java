@@ -59,7 +59,7 @@ public class MessagingClientHandler extends ChannelInboundHandlerAdapter {
             PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
 
             if (!client.getPublicKeys().containsKey(username)) {
-                LOGGER.info(String.format("%s joined the chat.", username));
+                System.out.println(String.format("%s joined the chat.", username));
 
                 if (username.equals(client.getName())) {
                     ByteBuf catchupReqBuf = ctx.alloc().buffer();
@@ -89,13 +89,13 @@ public class MessagingClientHandler extends ChannelInboundHandlerAdapter {
             byte[] messageBytes = messageCipher.doFinal(encryptedMessageBytes);
             String message = new String(messageBytes, StandardCharsets.UTF_8);
 
-            LOGGER.info(String.format("%s: %s", username, message));
+            System.out.println(String.format("%s: %s", username, message));
         } else if (packetId == PacketID.GOODBYE.getId()) {
             int usernameLength = in.readInt();
             String username = in.readCharSequence(usernameLength, StandardCharsets.UTF_8).toString();
 
             client.getPublicKeys().remove(username);
-            LOGGER.info(String.format("%s left the chat.", username));
+            System.out.println(String.format("%s left the chat.", username));
         } else if (packetId == PacketID.CATCHUP.getId()) {
             int length = in.readInt();
             for (int i = 0; i < length; i++) {
@@ -112,7 +112,7 @@ public class MessagingClientHandler extends ChannelInboundHandlerAdapter {
                 client.getPublicKeys().put(username, publicKey);
             }
 
-            LOGGER.info(String.format("There are %d users in the chat: %s", length, String.join(", ", client.getPublicKeys().keySet())));
+            System.out.println(String.format("There are %d users in the chat: %s", length, String.join(", ", client.getPublicKeys().keySet())));
         }
 
         // If there are any remaining bytes in the buffer, keep them for the next read
