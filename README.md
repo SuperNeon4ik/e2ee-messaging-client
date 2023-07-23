@@ -24,4 +24,4 @@ java -jar e2ee-messaging-client.jar -a 127.0.0.1 -p 6969
 **-s, --server:** Run the server client *(Defalt: `false`)*
 
 ## Gallery
-![зображення](https://github.com/SuperNeon4ik/e2ee-messaging-client/assets/52915540/a523d370-12e2-48b7-8a80-8471f0dbba92)
+![зображення](https://github.com/SuperNeon4ik/e2ee-messaging-client/assets/52915540/7ff0131e-6a69-43c7-bb5f-0e5da27bcf6b)
